@@ -159,6 +159,20 @@ if ($UpdaterService.Status -eq "Running"){
 
 # Try querying the EDR Health API.
 try {
+    # Check for listening port.
+    $ListeningPort=get-nettcpconnection -localport 24799 -LocalAddress 127.0.0.1
+    $i=0
+    while (($Listeningport.state -ne 'Listen') -or ($i -gt 3)){
+        Write-Output "`nWaiting 20 seconds for Health API to become available."
+        start-sleep 20
+        $ListeningPort=get-nettcpconnection -localport 24799 -LocalAddress 127.0.0.1
+        $i++
+    }
+    if ($i -gt 3){
+        write-status -status "Timeout waiting for Health API" -alert
+    }
+    write-output "`nHealth API port state: $listeningport.state"
+
     write-output "`nQuerying EDR Health API..."
     $response=Invoke-RestMethod -Uri 'http://localhost:24799/health' -ErrorAction Stop
     Write-Output "`tAPI response received."
